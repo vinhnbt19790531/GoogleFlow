@@ -27,10 +27,15 @@
 <label>Bài hát</label>
 <div class="row"><select id="song"></select><button class="sec" id="reload">↻</button></div>
 
+<button class="runBtn" id="run2">▶ Đưa ảnh qua Flow</button>
+<div class="row" style="margin-top:8px;justify-content:space-between">
+  <label style="margin:0;display:flex;align-items:center;gap:6px;color:#eee"><input type="checkbox" id="onlyNoVideo" checked style="width:auto"> Chỉ hiển thị cảnh chưa có video</label>
+  <button class="sec" id="sortBtn" style="margin:0" title="Đổi chiều sắp xếp">Cảnh ↓ giảm dần</button>
+</div>
 <table id="tbl"></table>
 <div class="small" id="info"></div>
 
-<button id="run">▶ Đưa ảnh + prompt của cảnh đã chọn vào Flow</button>
+<button class="runBtn" id="run">▶ Đưa ảnh + prompt của cảnh đã chọn vào Flow</button>
 <button id="stop" class="red" disabled>⛔ Dừng</button>
 <button id="diag" class="sec">🔍 Chẩn đoán trang Flow</button>
 
