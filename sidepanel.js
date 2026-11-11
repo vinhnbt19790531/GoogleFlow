@@ -100,12 +100,39 @@ function renderScenes() {
       <td>${thumb}</td>
       <td>Cảnh ${String(s.idx).padStart(2, "0")}</td>
       <td class="${s.image ? "ok" : "no"}">${s.image ? "ảnh ✓" : "thiếu ảnh"}</td>
-      <td class="${(s.prompt || "").trim() ? "ok" : "no"}">${(s.prompt || "").trim() ? "prompt ✓" : "thiếu prompt"}</td>
-      <td class="${s.video ? "ok" : "no"}">${s.video ? "video ✓ (sẽ ghi đè nếu chọn)" : "chưa có video"}</td></tr>`;
+      <td class="${(s.prompt || "").trim() ? "ok copyBtn" : "no"}" ${(s.prompt || "").trim() ? `data-id="${s.id}" title="Bấm để copy prompt của cảnh này" style="cursor:pointer;text-decoration:underline dotted"` : ""}>${(s.prompt || "").trim() ? "prompt ✓" : "thiếu prompt"}</td>
+      <td class="${s.video ? "ok" : "no"}${ready ? " sendBtn" : ""}" ${ready ? `data-id="${s.id}" title="Bấm để đưa ảnh + prompt của cảnh này qua Flow" style="cursor:pointer;text-decoration:underline dotted"` : ""}>${s.video ? "video ✓ (bấm để đưa qua Flow, sẽ ghi đè)" : "chưa có video (bấm để đưa qua Flow)"}</td></tr>`;
   }).join("");
   $("#tbl").innerHTML = `<tr><th></th><th>Ảnh</th><th>Cảnh</th><th colspan=3></th></tr>` + rows;
   $("#info").textContent = offline ? "⚠ Thư mục bài hát chưa truy cập được (đang dùng bản nhớ đệm)." : "";
 }
+
+$("#tbl").onclick = async (e) => {
+  const send = e.target.closest(".sendBtn");
+  if (send) {
+    const sc = scenes.find(s => s.id === +send.dataset.id);
+    const radio = document.querySelector(`#tbl input[data-id="${send.dataset.id}"]`);
+    if (radio) radio.checked = true;
+    if (sc) runScene(sc);
+    return;
+  }
+  const btn = e.target.closest(".copyBtn");
+  if (!btn) return;
+  const sc = scenes.find(s => s.id === +btn.dataset.id);
+  if (!sc) return;
+  const text = (sc.prompt || "").trim() + (cfg.suffix ? " " + cfg.suffix : "");
+  const label = `Cảnh ${String(sc.idx).padStart(2, "0")}`;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand("copy"); ta.remove();
+  }
+  log(`${label}: đã copy prompt.`);
+  const old = btn.textContent; btn.textContent = "đã copy ✓";
+  setTimeout(() => { btn.textContent = old; }, 1200);
+};
 
 // ------------------------------------------------------------ Flow tab
 
@@ -169,10 +196,13 @@ async function doScene(tab, sc) {
   }
 }
 
-const runScene = async () => {
-  const el = document.querySelector("#tbl input:checked");
-  if (!el) return alert("Chưa chọn cảnh nào.");
-  const sc = scenes.find(s => s.id === +el.dataset.id);
+const runScene = async (sc) => {
+  if (!sc || sc instanceof Event) {
+    const el = document.querySelector("#tbl input:checked");
+    if (!el) return alert("Chưa chọn cảnh nào.");
+    sc = scenes.find(s => s.id === +el.dataset.id);
+  }
+  if (running) return;
   running = true; stopping = false;
   document.querySelectorAll(".runBtn").forEach(b => b.disabled = true); $("#stop").disabled = false;
   try {
